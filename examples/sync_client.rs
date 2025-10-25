@@ -19,7 +19,7 @@ use esp_backtrace as _;
 use esp_mbedtls::{Certificates, Session};
 use esp_mbedtls::{Mode, Tls, TlsVersion, X509};
 use esp_println::{logger::init_logger, print, println};
-use esp_wifi::{
+use esp_radio::{
     init,
     wifi::{ClientConfiguration, Configuration},
 };
@@ -60,10 +60,10 @@ fn main() -> ! {
 
     let mut rng = Rng::new(peripherals.RNG);
 
-    let esp_wifi_ctrl = init(timg0.timer0, rng.clone()).unwrap();
+    let esp_wifi_ctrl = init().unwrap();
 
     let (mut controller, interfaces) =
-        esp_wifi::wifi::new(&esp_wifi_ctrl, peripherals.WIFI).unwrap();
+        esp_radio::wifi::new(&esp_wifi_ctrl, peripherals.WIFI, esp_radio::wifi::Config::default()).unwrap();
 
     let mut device = interfaces.sta;
     let iface = create_interface(&mut device);
@@ -208,7 +208,7 @@ fn timestamp() -> smoltcp::time::Instant {
     )
 }
 
-fn create_interface(device: &mut esp_wifi::wifi::WifiDevice) -> smoltcp::iface::Interface {
+fn create_interface(device: &mut esp_radio::wifi::WifiDevice) -> smoltcp::iface::Interface {
     // users could create multiple instances but since they only have one WifiDevice
     // they probably can't do anything bad with that
     smoltcp::iface::Interface::new(

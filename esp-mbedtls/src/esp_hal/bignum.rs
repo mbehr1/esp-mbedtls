@@ -180,9 +180,13 @@ pub unsafe extern "C" fn mbedtls_mpi_exp_mod(
                 error_checked!(mbedtls_mpi_grow(Z, m_words));
             }
 
-            nb::block!(rsa.ready()).unwrap();
-            rsa.enable_disable_constant_time_acceleration(true);
-            rsa.enable_disable_search_acceleration(true);
+            // ready doesn't exist in 1.0.0-rc.1 nb::block!(rsa.ready()).unwrap();
+            //rsa.enable_disable_constant_time_acceleration(true); // enables constant_time..
+            //rsa.enable_disable_search_acceleration(true); // enables search accel.
+            //#[cfg(not(esp32))]
+            //rsa.disable_constant_time(false);
+            //#[cfg(not(esp32))]
+            //rsa.search_acceleration(true);
             unsafe {
                 match num_words {
                     U256::LIMBS => {

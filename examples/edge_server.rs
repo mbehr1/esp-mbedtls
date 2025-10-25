@@ -31,10 +31,10 @@ use esp_mbedtls::{Certificates, Tls, TlsVersion};
 use esp_mbedtls::{TlsError, X509};
 use esp_println::logger::init_logger;
 use esp_println::println;
-use esp_wifi::wifi::{
+use esp_radio::wifi::{
     ClientConfiguration, Configuration, WifiController, WifiDevice, WifiEvent, WifiState,
 };
-use esp_wifi::{init, EspWifiController};
+use esp_radio::{init, EspWifiController};
 use hal::{clock::CpuClock, rng::Rng, timer::timg::TimerGroup};
 
 // Patch until https://github.com/embassy-rs/static-cell/issues/16 is fixed
@@ -82,10 +82,10 @@ async fn main(spawner: Spawner) -> ! {
 
     let esp_wifi_ctrl = &*mk_static!(
         EspWifiController<'_>,
-        init(timg0.timer0, rng.clone()).unwrap()
+        init().unwrap()
     );
 
-    let (controller, interfaces) = esp_wifi::wifi::new(&esp_wifi_ctrl, peripherals.WIFI).unwrap();
+    let (controller, interfaces) = esp_radio::wifi::new(&esp_wifi_ctrl, peripherals.WIFI, esp_radio::wifi::Config::default()).unwrap();
 
     let wifi_interface = interfaces.sta;
 
@@ -235,7 +235,7 @@ async fn connection(mut controller: WifiController<'static>) {
     println!("start connection task");
     println!("Device capabilities: {:?}", controller.capabilities());
     loop {
-        if matches!(esp_wifi::wifi::wifi_state(), WifiState::StaConnected) {
+        if matches!(esp_radio::wifi::wifi_state(), WifiState::StaConnected) {
             // wait until we're no longer connected
             controller.wait_for_event(WifiEvent::StaDisconnected).await;
             Timer::after(Duration::from_millis(5000)).await

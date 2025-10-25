@@ -12,7 +12,7 @@ use esp_println::{logger::init_logger, println};
 
 /// Only used for ROM functions
 #[allow(unused_imports)]
-use esp_wifi::init;
+use esp_radio::init;
 use hal::{clock::CpuClock, main, rng::Rng, timer::timg::TimerGroup};
 
 pub fn cycles() -> u64 {
@@ -34,7 +34,7 @@ esp_bootloader_esp_idf::esp_app_desc!();
 fn main() -> ! {
     init_logger(log::LevelFilter::Info);
 
-    // Init ESP-WIFI heap for malloc
+    // Init ESP-radio heap for malloc
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
