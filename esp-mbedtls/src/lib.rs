@@ -651,7 +651,37 @@ impl Tls<'_> {
             }
         };
 
-        result != 0
+        result == 0 // success
+    }
+
+    pub fn ssl_config_check(&mut self) -> i32 {
+        unsafe { 
+            let ssl_context = aligned_calloc(
+                align_of::<mbedtls_ssl_context>(),
+                size_of::<mbedtls_ssl_context>(),
+            ) as *mut mbedtls_ssl_context;
+            let ssl_config = aligned_calloc(
+                align_of::<mbedtls_ssl_config>(),
+                size_of::<mbedtls_ssl_config>(),
+            ) as *mut mbedtls_ssl_config;
+        
+            mbedtls_ssl_init(ssl_context);
+            mbedtls_ssl_conf_transport(ssl_config, MBEDTLS_SSL_TRANSPORT_STREAM as i32);
+            mbedtls_ssl_config_init(ssl_config);
+            let res = mbedtls_ssl_config_defaults(ssl_config, 
+                MBEDTLS_SSL_IS_CLIENT as i32,
+                    MBEDTLS_SSL_TRANSPORT_STREAM as i32,
+                    MBEDTLS_SSL_PRESET_DEFAULT as i32) as i32;
+            if res != 0 {
+                free(ssl_config as *const _);
+                free(ssl_context as *const _);
+                return res | 0x100000; // error codes are within 16 bits e.g. -0x7080 for MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE
+            }
+            let res = mbedtls_ssl_setup(ssl_context, ssl_config) as i32;
+            free(ssl_config as *const _);
+            free(ssl_context as *const _);
+            res
+        }
     }
 
     /// Get a reference to the `Tls` instance
